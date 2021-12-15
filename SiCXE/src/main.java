@@ -20,14 +20,14 @@ public class main {
     private static final String[][] registerArr = new String[8][2];
 
     public static void initializeRegisters () {
-        registerArr[0] = new String[]{"A", "00"};
-        registerArr[1] = new String[]{"X", "01"};
-        registerArr[2] = new String[]{"B", "04"};
-        registerArr[3] = new String[]{"S", "05"};
-        registerArr[4] = new String[]{"T", "06"};
-        registerArr[5] = new String[]{"F", "07"};
-        registerArr[6] = new String[]{"R1", "08"};
-        registerArr[7] = new String[]{"R2", "09"};
+        registerArr[0] = new String[]{"A", "0"};
+        registerArr[1] = new String[]{"X", "1"};
+        registerArr[2] = new String[]{"B", "4"};
+        registerArr[3] = new String[]{"S", "5"};
+        registerArr[4] = new String[]{"T", "6"};
+        registerArr[5] = new String[]{"F", "7"};
+        registerArr[6] = new String[]{"R1", "8"};
+        registerArr[7] = new String[]{"R2", "9"};
     }
 
 
@@ -192,6 +192,12 @@ public class main {
                 funct.add(lineArr[0]);
                 name.add(lineArr[1]);
             }
+            else if(lineArr.length == 1)
+            {
+                label.add("-");
+                funct.add(lineArr[0]);
+                name.add("-");
+            }
         }
 
         //printing everything
@@ -300,22 +306,33 @@ public class main {
             }
             else
             {
-                    if(name.get(i).split(",").length > 1){
-                        String objC=opCodeSearch(funct.get(i));
-                        String indexed[] = name.get(i).split(",");
-                        String address = labelAddressSearch(indexed[0], label, locctr);
-                        String indexAdd = "8000";
-                        //Since we add 8000 hex not 8000 decimal we'll parse it with base 16 and add to address only not whole Object code.
-                        address = Integer.toHexString(Integer.parseInt(address,16) + Integer.parseInt(indexAdd,16));
-                        address = "0".repeat(4-address.length()) + address;
-                        objcode.add(objC+address.toUpperCase(Locale.ROOT));
+                if (formatSearch(funct.get(i)).equalsIgnoreCase("1"))
+                {
+                    objcode.add(opCodeSearch(funct.get(i)));
+                }
+                else if (formatSearch(funct.get(i)).equalsIgnoreCase("2"))
+                {
+                    StringBuilder tempObjCode = new StringBuilder();
+                    tempObjCode.append(opCodeSearch(funct.get(i)));
+                    String registers[] = name.get(i).split(",");
+                    
+                    if (registers.length>1){
+                        tempObjCode.append(registerAddress(registers[0]));
+                        tempObjCode.append(registerAddress(registers[1]));
                     }
-                    else
-                    {
-                        String objC=opCodeSearch(funct.get(i));
-                        String address = labelAddressSearch(name.get(i), label, locctr);
-                        objcode.add(objC+address);
+                    
+                    else{
+                        tempObjCode.append(registerAddress(registers[0]));
+                        tempObjCode.append("0");
                     }
+                    
+                    String finalObjectCode = tempObjCode.toString();
+                    objcode.add(finalObjectCode);
+                }
+                else
+                {
+                    objcode.add("3/4");
+                }
             }
         }
 
