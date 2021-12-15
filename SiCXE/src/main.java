@@ -227,14 +227,6 @@ public class main {
             else if(funct.get(i).equalsIgnoreCase("base"))
             {
                 locctr.add(locctr.get(i));
-                for (int z=0;z<funct.size();z++)
-                {
-                    if (label.get(z).equalsIgnoreCase(name.get(i)))
-                    {
-                        base = Integer.parseInt(name.get(z),16);
-                    }
-                }
-                System.out.println("\n\nBASE="+base);
             }
             else if(funct.get(i).equalsIgnoreCase("resw")){
                 int reswDec = Integer.parseInt(name.get(i))*3 + Integer.parseInt(locctr.get(i),16);
@@ -302,6 +294,17 @@ public class main {
                 symbolTable.put(label.get(z),locctr.get(z));
             }
         }
+
+        //Assigning Base
+        for (int z=0;z<funct.size();z++)
+        {
+            if (funct.get(z).equalsIgnoreCase("base"))
+            {
+                base = Integer.parseInt(symbolTable.get(name.get(z)) ,16);
+            }
+        }
+
+        System.out.println("\n\n\nBASE="+base);
 
 
         //PASS TWO
