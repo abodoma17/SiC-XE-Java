@@ -468,7 +468,58 @@ public class main {
 
                 else
                 {
-                    objcode.add("4");
+                    String functName = funct.get(i).substring(1,funct.get(i).length());
+                    String address = "X";
+                    StringBuilder tempObjCode = new StringBuilder();
+                    tempObjCode.append(hexToBin(opCodeSearch(functName)));
+                    tempObjCode.deleteCharAt(7);
+                    tempObjCode.deleteCharAt(6);
+                    tempObjCode.append("000001");
+                    if(name.get(i).contains(",")) {
+                        tempObjCode.setCharAt(8, '1');
+                        String labelSplit[] = name.get(i).split(",");
+                        address=symbolTable.get(labelSplit[0]);
+                        address="0".repeat(5-address.length())+address;
+                    }
+                    else if(name.get(i).startsWith("@"))
+                    {
+                        tempObjCode.setCharAt(6,'1');
+                        String referenceName =  name.get(i).substring(1,name.get(i).length());
+                        address=symbolTable.get(referenceName);
+                        address="0".repeat(5-address.length())+address;
+                    }
+                    else if(name.get(i).startsWith("#"))
+                    {
+                        tempObjCode.setCharAt(7,'1');
+                        String value = name.get(i).substring(1,name.get(i).length());
+
+                        /*#50 -> convert the 50 to hex and store in disp
+                         #THREE -> throw exception and do whats in catch block*/
+                        try
+                        {
+                            value = Integer.toHexString(Integer.parseInt(value));
+                            address = "0".repeat(5-value.length()) + value;
+                        }
+                        catch (Exception e)
+                        {
+                            String referenceName =  name.get(i).substring(1,name.get(i).length());
+                            address=symbolTable.get(referenceName);
+                            address="0".repeat(5-address.length())+address;
+                        }
+                    }
+                    else
+                    {
+                        address=symbolTable.get(name.get(i));
+                        address="0".repeat(5-address.length())+address;
+                    }
+                    String finalObjCode="";
+                    for (int y=0;y<tempObjCode.length();y++)
+                    {
+                        String binaryText = tempObjCode.substring(y,y+4);
+                        finalObjCode += Integer.toHexString(Integer.parseInt(binaryText,2));
+                        y+=3;
+                    }
+                    objcode.add(finalObjCode.toUpperCase(Locale.ROOT)+address.toUpperCase(Locale.ROOT));
                 }
             }
         }
@@ -545,9 +596,9 @@ public class main {
         {
             if(label.get(x) != "-")
             {
-                System.out.println(locctr.get(x) +" "+ label.get(x) + " " + funct.get(x) + " " + name.get(x) + " " + objcode.get(x));
+                System.out.println(locctr.get(x).toUpperCase(Locale.ROOT) +" "+ label.get(x) + " " + funct.get(x) + " " + name.get(x) + " " + objcode.get(x));
             }
-            else{ System.out.println(locctr.get(x) +" "+funct.get(x) + " " + name.get(x) + " " + objcode.get(x));}
+            else{ System.out.println(locctr.get(x).toUpperCase(Locale.ROOT) +" "+funct.get(x) + " " + name.get(x) + " " + objcode.get(x));}
         }
 
         System.out.println("\nHTE Records: ");
