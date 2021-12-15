@@ -23,7 +23,8 @@ public class experiment {
         return hex;
     }
 
-    public static void main(String args[]) throws FileNotFoundException{
+    public static void opCode()
+    {
         System.out.println("hello");
         String hex = "18";
         StringBuilder bin = new StringBuilder();
@@ -37,7 +38,7 @@ public class experiment {
 
 
         //APPENDING NIXBPE
-        bin.append("000000");
+        bin.append("100100");
         System.out.println(bin);
         System.out.println(bin.length());
 
@@ -63,6 +64,26 @@ public class experiment {
         System.out.println("OPCODE");
         System.out.println(opCode);
     }
+
+    public static void main(String args[]) throws FileNotFoundException{
+        String test = "#5000";
+        String test1 = "#omar";
+        String omar = "";
+        int yes = 0;
+        try
+        {
+            yes = Integer.parseInt(test.substring(1,test.length()),16);
+            yes = Integer.parseInt(test1,16);
+        }
+        catch (Exception e)
+        {
+            omar = test1.substring(1,test1.length());
+        }
+        System.out.println(omar);
+        System.out.println(yes);
+    }
+
+
 
     //Else Condition PASS TWO
     /*

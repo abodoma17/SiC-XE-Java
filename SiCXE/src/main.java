@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Scanner;
 
@@ -20,14 +21,14 @@ public class main {
     private static final String[][] registerArr = new String[8][2];
 
     public static void initializeRegisters () {
-        registerArr[0] = new String[]{"A", "0"};
-        registerArr[1] = new String[]{"X", "1"};
-        registerArr[2] = new String[]{"B", "4"};
-        registerArr[3] = new String[]{"S", "5"};
-        registerArr[4] = new String[]{"T", "6"};
-        registerArr[5] = new String[]{"F", "7"};
-        registerArr[6] = new String[]{"R1", "8"};
-        registerArr[7] = new String[]{"R2", "9"};
+        registerArr[0] = new String[]{"A", "00"};
+        registerArr[1] = new String[]{"X", "01"};
+        registerArr[2] = new String[]{"B", "04"};
+        registerArr[3] = new String[]{"S", "05"};
+        registerArr[4] = new String[]{"T", "06"};
+        registerArr[5] = new String[]{"F", "07"};
+        registerArr[6] = new String[]{"R1", "08"};
+        registerArr[7] = new String[]{"R2", "09"};
     }
 
 
@@ -170,6 +171,7 @@ public class main {
         ArrayList<String> locctr = new ArrayList<>();
         ArrayList<String> objcode = new ArrayList<>();
         ArrayList<String> hteRecords = new ArrayList<>();
+        int base=0;
 
         File assem1 = new File("inSIC.txt");
 
@@ -221,6 +223,18 @@ public class main {
             {
                 locctr.add(locctr.get(i));
                 break;
+            }
+            else if(funct.get(i).equalsIgnoreCase("base"))
+            {
+                locctr.add(locctr.get(i));
+                for (int z=0;z<funct.size();z++)
+                {
+                    if (label.get(z).equalsIgnoreCase(name.get(i)))
+                    {
+                        base = Integer.parseInt(name.get(z),16);
+                    }
+                }
+                System.out.println("\n\nBASE="+base);
             }
             else if(funct.get(i).equalsIgnoreCase("resw")){
                 int reswDec = Integer.parseInt(name.get(i))*3 + Integer.parseInt(locctr.get(i),16);
@@ -280,11 +294,20 @@ public class main {
 
         }
 
-        System.out.print(locctr);
+        //Symbol Table
+        HashMap<String, String> symbolTable = new HashMap<String, String>();
+        for (int z=0;z<label.size()-1;z++)
+        {
+            if (!(label.get(z).equalsIgnoreCase("-"))){
+                symbolTable.put(label.get(z),locctr.get(z));
+            }
+        }
+
+
         //PASS TWO
         for(int i=0;i<funct.size();i++)
         {
-            if(funct.get(i).equalsIgnoreCase("start") || funct.get(i).equalsIgnoreCase("end") || funct.get(i).equalsIgnoreCase("resw") || funct.get(i).equalsIgnoreCase("resb"))
+            if(funct.get(i).equalsIgnoreCase("start") || funct.get(i).equalsIgnoreCase("end") || funct.get(i).equalsIgnoreCase("resw") || funct.get(i).equalsIgnoreCase("resb") || funct.get(i).equalsIgnoreCase("base"))
             {
                 objcode.add("-");
             }
@@ -310,6 +333,7 @@ public class main {
                 {
                     objcode.add(opCodeSearch(funct.get(i)));
                 }
+
                 else if (formatSearch(funct.get(i)).equalsIgnoreCase("2"))
                 {
                     StringBuilder tempObjCode = new StringBuilder();
@@ -323,15 +347,125 @@ public class main {
                     
                     else{
                         tempObjCode.append(registerAddress(registers[0]));
-                        tempObjCode.append("0");
+                        tempObjCode.append("00");
                     }
                     
                     String finalObjectCode = tempObjCode.toString();
                     objcode.add(finalObjectCode);
                 }
+
+                else if (formatSearch(funct.get(i)).equalsIgnoreCase("3")){
+                    StringBuilder tempObjCode = new StringBuilder();
+                    tempObjCode.append(hexToBin(opCodeSearch(funct.get(i))));
+                    tempObjCode.deleteCharAt(7);
+                    tempObjCode.deleteCharAt(6);
+                    tempObjCode.append("000000");
+                    String disp="X";
+                    if(name.get(i).contains(",")){
+                        tempObjCode.setCharAt(8, '1');
+                        String labelSplit[] = name.get(i).split(",");
+
+                        int address = Integer.parseInt(symbolTable.get(labelSplit[0]),16);
+                        address = address - Integer.parseInt(locctr.get(i+1),16);
+                        if (address>=Integer.parseInt("-2048",16) && address<=Integer.parseInt("2047",16))
+                        {
+                            tempObjCode.setCharAt(10,'1');
+                            disp = Integer.toHexString(address);
+                        }
+                        else
+                        {
+                            tempObjCode.setCharAt(9,'1');
+                            disp = Integer.toHexString(Integer.parseInt(symbolTable.get(labelSplit[0]),16) - base);
+                        }
+
+                    }
+
+                    if(name.get(i).startsWith("#")){
+                        tempObjCode.setCharAt(7, '1');
+                        String value = name.get(i).substring(1,name.get(i).length());
+
+                        /*#50 -> convert the 50 to hex and store in disp
+                         #THREE -> throw exception and do whats in catch block*/
+                        try
+                        {
+                            value = Integer.toHexString(Integer.parseInt(value));
+                            disp = "0".repeat(3-value.length()) + value;
+                        }
+                        catch(Exception e)
+                        {
+
+                            int address = Integer.parseInt(symbolTable.get(value),16);
+                            address = address - Integer.parseInt(locctr.get(i+1),16);
+
+                            if (address>=Integer.parseInt("-2048",16) && address<=Integer.parseInt("2047",16))
+                            {
+                                tempObjCode.setCharAt(10,'1');
+                                disp = Integer.toHexString(address);
+                            }
+
+                            else
+                            {
+                                tempObjCode.setCharAt(9,'1');
+                                disp = Integer.toHexString(Integer.parseInt(symbolTable.get(value),16) - base);
+                            }
+
+                        }
+                    }
+                    else if(name.get(i).startsWith("@")){
+                        tempObjCode.setCharAt(6, '1');
+                        String value = name.get(i).substring(1,name.get(i).length());
+                        int address = Integer.parseInt(symbolTable.get(value),16);
+                        address = address - Integer.parseInt(locctr.get(i+1),16);
+
+                        if (address>=Integer.parseInt("-2048",16) && address<=Integer.parseInt("2047",16))
+                        {
+                            tempObjCode.setCharAt(10,'1');
+                            disp = Integer.toHexString(address);
+                        }
+
+                        else
+                        {
+                            tempObjCode.setCharAt(9,'1');
+                            disp = Integer.toHexString(Integer.parseInt(symbolTable.get(value),16) - base);
+                        }
+                    }
+                    else
+                    {
+                        tempObjCode.setCharAt(6, '1');
+                        tempObjCode.setCharAt(7, '1');
+                    }
+
+                    if (disp.equalsIgnoreCase("X"))
+                    {
+                        tempObjCode.setCharAt(9,'1');
+                        tempObjCode.setCharAt(10,'1');
+                        int address = Integer.parseInt(symbolTable.get(name.get(i)),16);
+                        address = address - Integer.parseInt(locctr.get(i+1),16);
+                        if (address>=Integer.parseInt("-2048",16) && address<=Integer.parseInt("2047",16))
+                        {
+                            tempObjCode.setCharAt(10,'1');
+                            disp = Integer.toHexString(address).toUpperCase(Locale.ROOT);
+                        }
+                        else
+                        {
+                            tempObjCode.setCharAt(9,'1');
+                            disp = Integer.toHexString(Integer.parseInt(symbolTable.get(name.get(i)),16) - base);
+                        }
+                    }
+
+                    String finalObjCode="";
+                    for (int y=0;y<tempObjCode.length();y++)
+                    {
+                        String binaryText = tempObjCode.substring(y,y+4);
+                        finalObjCode += Integer.toHexString(Integer.parseInt(binaryText,2));
+                        y+=3;
+                    }
+                    objcode.add(finalObjCode.toUpperCase(Locale.ROOT)+"0".repeat(3-disp.length())+disp.toUpperCase(Locale.ROOT));
+                }
+
                 else
                 {
-                    objcode.add("3/4");
+                    objcode.add("4");
                 }
             }
         }
@@ -366,7 +500,12 @@ public class main {
                     k=k-1;
                     break;
                 }
-
+                if(funct.get(k).equalsIgnoreCase("base"))
+                {
+                    endAddress = locctr.get(k+1);
+                    k=k+1;
+                    continue;
+                }
                 opcodes = opcodes + objcode.get(k);
                 endAddress = locctr.get(k+1);
                 i=i+1;
