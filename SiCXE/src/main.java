@@ -173,7 +173,7 @@ public class main {
         ArrayList<String> hteRecords = new ArrayList<>();
         int base=0;
 
-        File assem1 = new File("inSIC.txt");
+        File assem1 = new File("inSICXE.txt");
 
         Scanner scan = new Scanner(assem1);
 
@@ -202,7 +202,9 @@ public class main {
             }
         }
 
-        //printing everything
+
+        System.out.println("\n-----------------------------------");
+        System.out.println("--------------PASS ONE--------------");
         for(int x=0; x<label.size(); x++)
         {
             if(label.get(x) != "-")
@@ -211,7 +213,7 @@ public class main {
             }
             else{ System.out.println(funct.get(x) + " " + name.get(x));}
         }
-
+        System.out.println("\n-----------------------------------");
 
         //PASS ONE
         locctr.add(name.get(0));
@@ -231,26 +233,23 @@ public class main {
             else if(funct.get(i).equalsIgnoreCase("resw")){
                 int reswDec = Integer.parseInt(name.get(i))*3 + Integer.parseInt(locctr.get(i),16);
                 locctr.add(Integer.toHexString(reswDec));
-                continue;
             }
             else if(funct.get(i).equalsIgnoreCase("resb")){
                 int resbDec = Integer.parseInt(name.get(i)) + Integer.parseInt(locctr.get(i),16);
                 locctr.add(Integer.toHexString(resbDec));
-                continue;
             }
             else if(funct.get(i).equalsIgnoreCase("byte")){
-                if(name.get(i).startsWith("x")){
+                if(name.get(i).startsWith("x") || name.get(i).startsWith("X")){
                     int len = name.get(i).length() - 3;
                     int byteDec = len/2 + Integer.parseInt(locctr.get(i),16);
                     locctr.add(Integer.toHexString(byteDec));
                 }
-                else if (name.get(i).startsWith("c")){
+                else if (name.get(i).startsWith("c") || name.get(i).startsWith("C")){
 
                     int len = name.get(i).length() - 3;
                     int byteDec = len + Integer.parseInt(locctr.get(i),16);
                     locctr.add(Integer.toHexString(byteDec));
                 }
-                continue;
             }
             else if(funct.get(i).equalsIgnoreCase("word")){
                 String wordArr[] = name.get(i).split(",");
@@ -264,7 +263,6 @@ public class main {
                     loc = loc+3;
                     locctr.add(Integer.toHexString(loc).toUpperCase(Locale.ROOT));
                 }
-                continue;
             }
             else if(funct.get(i).startsWith("+")){
                 int loc = Integer.parseInt(locctr.get(i),16 );
@@ -276,14 +274,12 @@ public class main {
                 int loc = Integer.parseInt(locctr.get(i),16);
                 loc += Integer.parseInt(formatSearch(funct.get(i)));
                 locctr.add(Integer.toHexString(loc).toUpperCase());
-                continue;
             }
             else{
                 int loc = Integer.parseInt(locctr.get(i),16 );
                 loc = loc+3;
                 locctr.add(Integer.toHexString(loc).toUpperCase(Locale.ROOT));
             }
-
         }
 
         //Symbol Table
@@ -304,8 +300,8 @@ public class main {
             }
         }
 
-        System.out.println("\n\n\nBASE="+base);
-
+        System.out.println("\nBASE = "+base);
+        System.out.println("\n-----------------------------------");
 
         //PASS TWO
         for(int i=0;i<funct.size();i++)
@@ -316,46 +312,63 @@ public class main {
             }
             else if(funct.get(i).equalsIgnoreCase("byte"))
             {
-                if (name.get(i).startsWith("x")){
+                if (name.get(i).startsWith("x") || name.get(i).startsWith("X")){
                     objcode.add(name.get(i).substring(2,name.get(i).length()-1));
                 }
-                else if(name.get(i).startsWith("c")){
+                else if(name.get(i).startsWith("c") || name.get(i).startsWith("C")){
                     objcode.add(asciiConv(name.get(i)));
                 }
             }
             else if(funct.get(i).equalsIgnoreCase("word")){
-                    String objC = Integer.toHexString(Integer.parseInt(name.get(i)));
-                    if (objC.length()<6){
-                        objC = "0".repeat(6-objC.length()) + objC;
-                    }
-                    objcode.add(objC);
+                String objC = Integer.toHexString(Integer.parseInt(name.get(i)));
+                if (objC.length()<6){
+                    objC = "0".repeat(6-objC.length()) + objC;
+                }
+                objcode.add(objC);
             }
             else
             {
+
+
+
+
                 if (formatSearch(funct.get(i)).equalsIgnoreCase("1"))
                 {
                     objcode.add(opCodeSearch(funct.get(i)));
                 }
+
+
+
+
+
+
 
                 else if (formatSearch(funct.get(i)).equalsIgnoreCase("2"))
                 {
                     StringBuilder tempObjCode = new StringBuilder();
                     tempObjCode.append(opCodeSearch(funct.get(i)));
                     String registers[] = name.get(i).split(",");
-                    
+
                     if (registers.length>1){
                         tempObjCode.append(registerAddress(registers[0]));
                         tempObjCode.append(registerAddress(registers[1]));
                     }
-                    
+
                     else{
                         tempObjCode.append(registerAddress(registers[0]));
                         tempObjCode.append("00");
                     }
-                    
+
                     String finalObjectCode = tempObjCode.toString();
                     objcode.add(finalObjectCode);
                 }
+
+
+
+
+
+
+
 
                 else if (formatSearch(funct.get(i)).equalsIgnoreCase("3")){
                     StringBuilder tempObjCode = new StringBuilder();
@@ -370,7 +383,7 @@ public class main {
 
                         int address = Integer.parseInt(symbolTable.get(labelSplit[0]),16);
                         address = address - Integer.parseInt(locctr.get(i+1),16);
-                        if (address>=Integer.parseInt("-2048",16) && address<=Integer.parseInt("2047",16))
+                        if (address>=-2048 && address<=2047)
                         {
                             tempObjCode.setCharAt(10,'1');
                             disp = Integer.toHexString(address);
@@ -400,7 +413,7 @@ public class main {
                             int address = Integer.parseInt(symbolTable.get(value),16);
                             address = address - Integer.parseInt(locctr.get(i+1),16);
 
-                            if (address>=Integer.parseInt("-2048",16) && address<=Integer.parseInt("2047",16))
+                            if (address>=-2048 && address<=2047)
                             {
                                 tempObjCode.setCharAt(10,'1');
                                 disp = Integer.toHexString(address);
@@ -420,7 +433,7 @@ public class main {
                         int address = Integer.parseInt(symbolTable.get(value),16);
                         address = address - Integer.parseInt(locctr.get(i+1),16);
 
-                        if (address>=Integer.parseInt("-2048",16) && address<=Integer.parseInt("2047",16))
+                        if (address>=-2048 && address<=2047)
                         {
                             tempObjCode.setCharAt(10,'1');
                             disp = Integer.toHexString(address);
@@ -430,6 +443,7 @@ public class main {
                         {
                             tempObjCode.setCharAt(9,'1');
                             disp = Integer.toHexString(Integer.parseInt(symbolTable.get(value),16) - base);
+
                         }
                     }
                     else
@@ -438,13 +452,16 @@ public class main {
                         tempObjCode.setCharAt(7, '1');
                     }
 
+                    if(name.get(i).equalsIgnoreCase("-"))
+                    {
+                        disp="000";
+                    }
+
                     if (disp.equalsIgnoreCase("X"))
                     {
-                        tempObjCode.setCharAt(9,'1');
-                        tempObjCode.setCharAt(10,'1');
                         int address = Integer.parseInt(symbolTable.get(name.get(i)),16);
                         address = address - Integer.parseInt(locctr.get(i+1),16);
-                        if (address>=Integer.parseInt("-2048",16) && address<=Integer.parseInt("2047",16))
+                        if (address>=-2048 && address<=2047)
                         {
                             tempObjCode.setCharAt(10,'1');
                             disp = Integer.toHexString(address).toUpperCase(Locale.ROOT);
@@ -463,9 +480,25 @@ public class main {
                         finalObjCode += Integer.toHexString(Integer.parseInt(binaryText,2));
                         y+=3;
                     }
-                    objcode.add(finalObjCode.toUpperCase(Locale.ROOT)+"0".repeat(3-disp.length())+disp.toUpperCase(Locale.ROOT));
+
+
+
+                    if(disp.length() > 3)
+                    {
+                        disp = disp.substring(disp.length()-3,disp.length());
+                    }
+                    else
+                    {
+                        disp = "0".repeat(3-disp.length()) + disp;
+                    }
+
+                    objcode.add(finalObjCode.toUpperCase(Locale.ROOT)+disp.toUpperCase(Locale.ROOT));
                 }
 
+
+
+
+                //PASS TWO FORMAT 4
                 else
                 {
                     String functName = funct.get(i).substring(1,funct.get(i).length());
@@ -509,6 +542,8 @@ public class main {
                     }
                     else
                     {
+                        tempObjCode.setCharAt(6,'1');
+                        tempObjCode.setCharAt(7,'1');
                         address=symbolTable.get(name.get(i));
                         address="0".repeat(5-address.length())+address;
                     }
@@ -520,13 +555,15 @@ public class main {
                         y+=3;
                     }
                     objcode.add(finalObjCode.toUpperCase(Locale.ROOT)+address.toUpperCase(Locale.ROOT));
+
                 }
+
             }
         }
 
 
 
-
+        //HTE RECORD
         String progLength = Integer.toHexString(Integer.parseInt(locctr.get(locctr.size()-1),16) - Integer.parseInt(locctr.get(0),16));
         progLength = "0".repeat(6-progLength.length()) + progLength;
         String progName = name.get(name.size()-1);
@@ -577,21 +614,21 @@ public class main {
         String hteEnd = "En^" + ( "0".repeat(6 - locctr.get(0).length()) + locctr.get(0));
         hteRecords.add(hteEnd);
 
-        System.out.println("\n\n\n\nSymbol Table");
+        System.out.println("\nSymbol Table");
         System.out.println("---------------------");
         System.out.println("Label\tAddress\n");
         for (int i=0;i<label.size();i++){
             if ( !(label.get(i).equalsIgnoreCase("-")) )
             {
-                System.out.println(label.get(i) + "\t" + locctr.get(i));
+                System.out.println(label.get(i) + "\t" + locctr.get(i).toUpperCase(Locale.ROOT));
             }
         }
 
 
-
+        System.out.println("\n----------------------------------------------------------------------------------------");
 
         //printing everything
-        System.out.println("\n\n\n\nLOCATION LABEL INSTRUCTION REFERENCE OBJECTCODE\n");
+        System.out.println("\nLOCATION LABEL INSTRUCTION REFERENCE OBJECTCODE\n");
         for(int x=0; x<label.size(); x++)
         {
             if(label.get(x) != "-")
@@ -601,11 +638,16 @@ public class main {
             else{ System.out.println(locctr.get(x).toUpperCase(Locale.ROOT) +" "+funct.get(x) + " " + name.get(x) + " " + objcode.get(x));}
         }
 
+        System.out.println("\n----------------------------------------------------------------------------------------");
         System.out.println("\nHTE Records: ");
-        System.out.println("\n");
+
         for(int i = 0;i<hteRecords.size();i++)
         {
             System.out.println(hteRecords.get(i));
         }
+
+
+
+
     }
 }
